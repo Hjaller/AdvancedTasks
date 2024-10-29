@@ -96,7 +96,14 @@ namespace AdvancedTasks.Phonebook
             DisplaySearchField(searchTermBuilder.ToString(), selectedIndex);
             Console.WriteLine();
 
-            DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+            if (filteredContacts.Count == 0)
+            {
+                Console.WriteLine("No contacts found.");
+            }
+            else
+            {
+                DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+            }
 
             while (true)
             {
@@ -153,7 +160,14 @@ namespace AdvancedTasks.Phonebook
                         DisplaySearchField(searchTermBuilder.ToString(), selectedIndex);
                         Console.WriteLine();
 
-                        DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                        if (filteredContacts.Count == 0)
+                        {
+                            Console.WriteLine("No contacts found.");
+                        }
+                        else
+                        {
+                            DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                        }
                     }
                 }
                 else if (keyInfo.Key == ConsoleKey.Delete)
@@ -213,6 +227,7 @@ namespace AdvancedTasks.Phonebook
                 }
             }
         }
+
 
         /// <summary>
         /// Filters the contact list based on the search term.
