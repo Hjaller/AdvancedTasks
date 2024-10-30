@@ -26,5 +26,16 @@ namespace AdvancedTasks.EmployeeAndSalary
             HourlySalary = 0;
             Taxes = 0;
         }
+
+        public double CalculateGrossSalary()
+        {
+            return Hours * HourlySalary;
+        }
+
+        public double CalculateNetSalary()
+        {
+            double grossSalary = CalculateGrossSalary();
+            return grossSalary - (grossSalary * (Taxes / 100));
+        }
     }
 }

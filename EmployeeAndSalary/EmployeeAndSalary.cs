@@ -57,15 +57,15 @@ namespace AdvancedTasks.EmployeeAndSalary
             Console.Clear();
             double hours = Utils.Utils.GetValidDecimal("Enter the number of hours worked: ");
             double hourlySalary = Utils.Utils.GetValidDecimal("Enter the hourly salary: ");
-            double taxes = Utils.Utils.GetValidDecimal("Enter the taxes procentage (without %): ");
+            double taxes = Utils.Utils.GetValidDecimal("Enter the taxes percentage (without %): ");
 
             Salary newSalary = new Salary(hours, hourlySalary, taxes);
             employee.AddSalary(newSalary);
             SaveEmployeesToFile();
 
             Console.WriteLine("Salary added successfully.");
+            ListOfSalaries(employee);
         }
-
 
         public static void ListOfEmployees(int pageNumber = 1, string searchTerm = "")
         {
@@ -78,7 +78,7 @@ namespace AdvancedTasks.EmployeeAndSalary
             if (pageNumber < 1) pageNumber = 1;
 
             Console.Clear();
-            Console.WriteLine("Use the arrow keys to navigate,Enter to view and add salary, E to edit, and Delete to delete:");
+            Console.WriteLine("Use the arrow keys to navigate, Enter to view or add salary, E to edit, and Delete to delete:");
             DisplaySearchField(searchTermBuilder.ToString(), selectedIndex);
             Console.WriteLine();
 
@@ -142,7 +142,7 @@ namespace AdvancedTasks.EmployeeAndSalary
                         selectedIndex = -1;
 
                         Console.Clear();
-                        Console.WriteLine("Use the arrow keys to navigate, Enter to edit, and Delete to delete:");
+                        Console.WriteLine("Use the arrow keys to navigate, Enter to add to view or add salary, E to edit, and Delete to delete:");
                         DisplaySearchField(searchTermBuilder.ToString(), selectedIndex);
                         Console.WriteLine();
 
@@ -189,8 +189,21 @@ namespace AdvancedTasks.EmployeeAndSalary
                         DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
                     }
                 }
+                else if (keyInfo.Key == ConsoleKey.Enter)
+                {
+                    if (selectedIndex != -1)
+                    {
+                        int contactIndex = (pageNumber - 1) * PageSize + selectedIndex;
+                        if (contactIndex < filteredEmployees.Count)
+                        {
+                            ListOfSalaries(filteredEmployees[contactIndex]);
+                            DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
+                        }
+                    }
+                }
                 else if (keyInfo.Key == ConsoleKey.Escape)
                 {
+                    Console.Clear();
                     return;
                 }
                 else if (selectedIndex == -1)
@@ -271,6 +284,118 @@ namespace AdvancedTasks.EmployeeAndSalary
             Console.WriteLine(searchTerm.PadRight(Console.WindowWidth - 8));
             Console.ResetColor();
         }
+
+        public static void ListOfSalaries(Employee employee, int pageNumber = 1)
+        {
+            int selectedIndex = -1; // -1 indicates the add salary option
+            List<Salary> salaries = employee.Salaries.ToList();
+            int totalPages = (int)Math.Ceiling((double)salaries.Count / PageSize);
+            if (pageNumber > totalPages) pageNumber = totalPages;
+            if (pageNumber < 1) pageNumber = 1;
+
+            Console.Clear();
+            Console.WriteLine($"Salaries for {employee.Name}");
+            Console.WriteLine("Use the arrow keys to navigate, A to add salary, and Delete to delete:");
+
+            DisplaySalaries(salaries, pageNumber, selectedIndex);
+
+            while (true)
+            {
+                var keyInfo = Console.ReadKey(intercept: true);
+                int previousIndex = selectedIndex;
+
+                if (keyInfo.Key == ConsoleKey.UpArrow)
+                {
+                    selectedIndex--;
+                    if (selectedIndex < -1) selectedIndex = -1;
+                }
+                else if (keyInfo.Key == ConsoleKey.DownArrow)
+                {
+                    selectedIndex++;
+                    if (selectedIndex >= PageSize) selectedIndex = PageSize - 1;
+                }
+                else if (keyInfo.Key == ConsoleKey.A)
+                {
+                    AddSalaryToEmployee(employee);
+                }
+                else if (keyInfo.Key == ConsoleKey.Delete)
+                {
+                    if (selectedIndex != -1)
+                    {
+                        int salaryIndex = (pageNumber - 1) * PageSize + selectedIndex;
+                        if (salaryIndex < salaries.Count)
+                        {
+                            salaries.RemoveAt(salaryIndex);
+                            employee.Salaries = salaries.ToArray();
+                            SaveEmployeesToFile();
+                            ListOfSalaries(employee);
+                        }
+                    }
+                }
+                else if (keyInfo.Key == ConsoleKey.LeftArrow)
+                {
+                    if (pageNumber > 1)
+                    {
+                        pageNumber--;
+                        selectedIndex = 0;
+                        DisplaySalaries(salaries, pageNumber, selectedIndex);
+                    }
+                }
+                else if (keyInfo.Key == ConsoleKey.RightArrow)
+                {
+                    if (pageNumber < totalPages)
+                    {
+                        pageNumber++;
+                        selectedIndex = 0;
+                        DisplaySalaries(salaries, pageNumber, selectedIndex);
+                    }
+                }
+                else if (keyInfo.Key == ConsoleKey.Escape)
+                {
+                    Console.Clear();
+                    ListOfEmployees();
+                }
+
+                if (previousIndex != selectedIndex)
+                {
+                    DisplaySalaries(salaries, pageNumber, selectedIndex);
+                }
+            }
+        }
+
+        private static void DisplaySalaries(List<Salary> salaries, int pageNumber, int selectedIndex)
+        {
+            Console.SetCursorPosition(0, 3); // Set cursor position to start of salary list
+
+            if(salaries.Count == 0)
+            {
+                Console.WriteLine("No salaries found. Create a new with key A");
+                return;
+            }
+            int start = (pageNumber - 1) * PageSize;
+            int end = Math.Min(start + PageSize, salaries.Count);
+
+            for (int i = start; i < end; i++)
+            {
+                double grossSalary = salaries[i].CalculateGrossSalary();
+                double netSalary = salaries[i].CalculateNetSalary();
+
+                if (i - start == selectedIndex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"> Nr. {i + 1} Hours: {salaries[i].Hours}, Hourly Salary: {salaries[i].HourlySalary}, Taxes: {salaries[i].Taxes}%, Gross Salary: {grossSalary}, Net Salary: {netSalary}");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.WriteLine($"  Nr. {i + 1} Hours: {salaries[i].Hours}, Hourly Salary: {salaries[i].HourlySalary}, Taxes: {salaries[i].Taxes}%, Gross Salary: {grossSalary}, Net Salary: {netSalary}");
+                }
+            }
+
+            Console.WriteLine($"\nPage {pageNumber}/{(int)Math.Ceiling((double)salaries.Count / PageSize)}");
+        }
+
+
 
 
         /// <summary>
