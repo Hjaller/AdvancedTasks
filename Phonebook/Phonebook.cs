@@ -73,7 +73,7 @@ namespace AdvancedTasks.Phonebook
         public static void DeleteContact(Contact contact)
         {
             contacts.Remove(contact);
-            Console.WriteLine("Contact deleted successfully.");
+            ListOfContact();
         }
 
         /// <summary>
