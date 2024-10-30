@@ -466,6 +466,3 @@ namespace AdvancedTasks.EmployeeAndSalary
         }
     }
 }
-
-    }
-}
