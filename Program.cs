@@ -9,6 +9,7 @@ namespace AdvancedTasks
             try
             {
                 Phonebook.Phonebook.LoadContactsFromFile();
+                EmployeeAndSalary.EmployeeAndSalary.LoadEmployeesFromFile();
                 ShowMenu(MainMenuOptions);
             }
             catch (Exception ex)
@@ -20,6 +21,7 @@ namespace AdvancedTasks
                 try
                 {
                     Phonebook.Phonebook.SaveContactsToFile();
+                    EmployeeAndSalary.EmployeeAndSalary.LoadEmployeesFromFile();
                 }
                 catch (Exception ex)
                 {
@@ -36,6 +38,12 @@ namespace AdvancedTasks
                     new MenuOption("Create contact", Phonebook.Phonebook.CreateContact),
                     new MenuOption("List contacts", () => Phonebook.Phonebook.ListOfContact()),
                     new MenuOption("Save to file", Phonebook.Phonebook.SaveContactsToFile),// Fix applied here
+                }),
+                new MenuOption("Employee and Salary", null, new MenuOption[]
+                {
+                    new MenuOption("Create employee", EmployeeAndSalary.EmployeeAndSalary.CreateEmployee),
+                    new MenuOption("List employees", () => EmployeeAndSalary.EmployeeAndSalary.ListOfEmployees()),
+                    new MenuOption("Save to file", () => EmployeeAndSalary.EmployeeAndSalary.SaveEmployeesToFile()),// Fix applied here
                 }),
                 new MenuOption("Exit", ExitProgram)
             };

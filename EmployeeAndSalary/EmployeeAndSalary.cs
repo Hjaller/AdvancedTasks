@@ -1,110 +1,94 @@
-﻿using AdvancedTasks.Menu;
+﻿using AdvancedTasks.Phonebook;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace AdvancedTasks.Phonebook
+namespace AdvancedTasks.EmployeeAndSalary
 {
-    internal class Phonebook
+    public class EmployeeAndSalary
     {
-        private static List<Contact> contacts = new List<Contact>();
-        private static readonly string filePath = "contacts.json";
+        private static List<Employee> employees = new List<Employee>();
+        private static readonly string filePath = "employee_salaries.json";
         private const int PageSize = 10;
 
-        /// <summary>
-        /// Creates a new contact and adds it to the contact list.
-        /// </summary>
-        public static void CreateContact()
+
+        public static void CreateEmployee()
         {
             Console.Clear();
-            string name = Utils.Utils.GetValidString("Enter the name of the contact: ");
-            string phoneNumber = Utils.Utils.GetValidPhoneNumber("Enter the phone number of the contact: ");
-            string email = Utils.Utils.GetValidEmail("Enter the email of the contact: ");
+            string name = Utils.Utils.GetValidString("Enter the employees name: ");
 
-            Contact newContact = new Contact(name, phoneNumber, email);
-            contacts.Add(newContact);
-            SaveContactsToFile();
+            Employee employee = new Employee(name);
+            employees.Add(employee);
+            SaveEmployeesToFile();
 
-            Console.WriteLine("Contact created successfully.");
+            Console.Write("Employee created successfully.");
+
         }
 
-        /// <summary>
-        /// Edits an existing contact.
-        /// </summary>
-        /// <param name="contact">The contact to edit.</param>
-        public static void EditContact(Contact contact)
+
+        public static void EditEmployee(Employee employee)
         {
             Console.Clear();
             Console.WriteLine("Editing contact:");
-            Console.WriteLine($"Current name: {contact.Name}");
+            Console.WriteLine($"Current name: {employee.Name}");
             Console.Write("New name (leave blank to keep current): ");
             string newName = Console.ReadLine() ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(newName))
             {
-                contact.Name = newName;
-            }
-
-            Console.WriteLine($"Current phone number: {contact.PhoneNumber}");
-            Console.Write("New phone number (leave blank to keep current): ");
-            string newPhoneNumber = Console.ReadLine() ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(newPhoneNumber))
-            {
-                contact.PhoneNumber = newPhoneNumber;
-            }
-
-            Console.WriteLine($"Current email: {contact.Email}");
-            Console.Write("New email (leave blank to keep current): ");
-            string newEmail = Console.ReadLine() ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(newEmail))
-            {
-                contact.Email = newEmail;
+                employee.Name = newName;
             }
 
             Console.WriteLine("Contact updated successfully.");
-            ListOfContact();
+            ListOfEmployees();
         }
 
-        /// <summary>
-        /// Deletes a contact from the contact list.
-        /// </summary>
-        /// <param name="contact">The contact to delete.</param>
-        public static void DeleteContact(Contact contact)
+        public static void DeleteEmployee(Employee employee)
         {
-            contacts.Remove(contact);
-            SaveContactsToFile();
-            ListOfContact();
+            employees.Remove(employee);
+            SaveEmployeesToFile();
+            ListOfEmployees();
         }
 
-        /// <summary>
-        /// Displays a paginated list of contacts with search functionality.
-        /// </summary>
-        /// <param name="pageNumber">The page number to display.</param>
-        /// <param name="searchTerm">The search term to filter contacts.</param>
-        public static void ListOfContact(int pageNumber = 1, string searchTerm = "")
+        public static void AddSalaryToEmployee(Employee employee)
+        {
+            Console.Clear();
+            double hours = Utils.Utils.GetValidDecimal("Enter the number of hours worked: ");
+            double hourlySalary = Utils.Utils.GetValidDecimal("Enter the hourly salary: ");
+            double taxes = Utils.Utils.GetValidDecimal("Enter the taxes procentage (without %): ");
+
+            Salary newSalary = new Salary(hours, hourlySalary, taxes);
+            employee.AddSalary(newSalary);
+            SaveEmployeesToFile();
+
+            Console.WriteLine("Salary added successfully.");
+        }
+
+
+        public static void ListOfEmployees(int pageNumber = 1, string searchTerm = "")
         {
             int selectedIndex = -1; // -1 indicates the search field
             StringBuilder searchTermBuilder = new StringBuilder(searchTerm);
-            List<Contact> filteredContacts = FilterContacts(searchTermBuilder.ToString());
+            List<Employee> filteredEmployees = FilterEmployees(searchTermBuilder.ToString());
 
-            int totalPages = (int)Math.Ceiling((double)filteredContacts.Count / PageSize);
+            int totalPages = (int)Math.Ceiling((double)filteredEmployees.Count / PageSize);
             if (pageNumber > totalPages) pageNumber = totalPages;
             if (pageNumber < 1) pageNumber = 1;
 
             Console.Clear();
-            Console.WriteLine("Use the arrow keys to navigate, Enter to edit, and Delete to delete:");
+            Console.WriteLine("Use the arrow keys to navigate,Enter to view and add salary, E to edit, and Delete to delete:");
             DisplaySearchField(searchTermBuilder.ToString(), selectedIndex);
             Console.WriteLine();
 
-            if (filteredContacts.Count == 0)
+            if (filteredEmployees.Count == 0)
             {
                 Console.WriteLine("No contacts found.");
             }
             else
             {
-                DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
             }
 
             while (true)
@@ -139,21 +123,21 @@ namespace AdvancedTasks.Phonebook
                         if (selectedIndex >= PageSize) selectedIndex = PageSize - 1;
                     }
                 }
-                else if (keyInfo.Key == ConsoleKey.Enter)
+                else if (keyInfo.Key == ConsoleKey.E)
                 {
                     if (selectedIndex != -1)
                     {
                         int contactIndex = (pageNumber - 1) * PageSize + selectedIndex;
-                        if (contactIndex < filteredContacts.Count)
+                        if (contactIndex < filteredEmployees.Count)
                         {
-                            EditContact(filteredContacts[contactIndex]);
-                            DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                            EditEmployee(filteredEmployees[contactIndex]);
+                            DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
                         }
                     }
                     else
                     {
-                        filteredContacts = FilterContacts(searchTermBuilder.ToString());
-                        totalPages = (int)Math.Ceiling((double)filteredContacts.Count / PageSize);
+                        filteredEmployees = FilterEmployees(searchTermBuilder.ToString());
+                        totalPages = (int)Math.Ceiling((double)filteredEmployees.Count / PageSize);
                         pageNumber = 1;
                         selectedIndex = -1;
 
@@ -162,13 +146,13 @@ namespace AdvancedTasks.Phonebook
                         DisplaySearchField(searchTermBuilder.ToString(), selectedIndex);
                         Console.WriteLine();
 
-                        if (filteredContacts.Count == 0)
+                        if (filteredEmployees.Count == 0)
                         {
-                            Console.WriteLine("No contacts found.");
+                            Console.WriteLine("No employees found.");
                         }
                         else
                         {
-                            DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                            DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
                         }
                     }
                 }
@@ -177,11 +161,11 @@ namespace AdvancedTasks.Phonebook
                     if (selectedIndex != -1)
                     {
                         int contactIndex = (pageNumber - 1) * PageSize + selectedIndex;
-                        if (contactIndex < filteredContacts.Count)
+                        if (contactIndex < filteredEmployees.Count)
                         {
-                            DeleteContact(filteredContacts[contactIndex]);
-                            filteredContacts.RemoveAt(contactIndex);
-                            DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                            DeleteEmployee(filteredEmployees[contactIndex]);
+                            filteredEmployees.RemoveAt(contactIndex);
+                            DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
                         }
                     }
                 }
@@ -192,7 +176,7 @@ namespace AdvancedTasks.Phonebook
                         Console.Clear();
                         pageNumber--;
                         selectedIndex = 0;
-                        DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                        DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
                     }
                 }
                 else if (keyInfo.Key == ConsoleKey.RightArrow)
@@ -202,7 +186,7 @@ namespace AdvancedTasks.Phonebook
                         Console.Clear();
                         pageNumber++;
                         selectedIndex = 0;
-                        DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                        DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
                     }
                 }
                 else if (keyInfo.Key == ConsoleKey.Escape)
@@ -227,7 +211,7 @@ namespace AdvancedTasks.Phonebook
                 if (previousIndex != selectedIndex)
                 {
                     DisplaySearchField(searchTermBuilder.ToString(), selectedIndex);
-                    DisplayContacts(filteredContacts, pageNumber, selectedIndex);
+                    DisplayEmployees(filteredEmployees, pageNumber, selectedIndex);
                 }
             }
         }
@@ -238,12 +222,10 @@ namespace AdvancedTasks.Phonebook
         /// </summary>
         /// <param name="searchTerm">The search term to filter contacts.</param>
         /// <returns>A list of filtered contacts.</returns>
-        private static List<Contact> FilterContacts(string searchTerm)
+        private static List<Employee> FilterEmployees(string searchTerm)
         {
-            return contacts
-                .Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                            c.PhoneNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                            c.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            return employees
+                .Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
 
@@ -253,27 +235,27 @@ namespace AdvancedTasks.Phonebook
         /// <param name="contacts">The list of contacts to display.</param>
         /// <param name="pageNumber">The current page number.</param>
         /// <param name="selectedIndex">The index of the selected contact.</param>
-        private static void DisplayContacts(List<Contact> contacts, int pageNumber, int selectedIndex)
+        private static void DisplayEmployees(List<Employee> employee, int pageNumber, int selectedIndex)
         {
             Console.SetCursorPosition(0, 3); // Set cursor position to start of contact list
             int start = (pageNumber - 1) * PageSize;
-            int end = Math.Min(start + PageSize, contacts.Count);
+            int end = Math.Min(start + PageSize, employee.Count);
 
             for (int i = start; i < end; i++)
             {
                 if (i - start == selectedIndex)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"> {contacts[i].Name} - {contacts[i].PhoneNumber} - {contacts[i].Email}");
+                    Console.WriteLine($"> Nr. {i + 1} {employee[i].Name} - Salaries {employee[i].Salaries.Length}");
                     Console.ResetColor();
                 }
                 else
                 {
-                    Console.WriteLine($"  {contacts[i].Name} - {contacts[i].PhoneNumber} - {contacts[i].Email}");
+                    Console.WriteLine($"  Nr. {i+1} {employee[i].Name} - Salaries {employee[i].Salaries.Length}");
                 }
             }
 
-            Console.WriteLine($"\nPage {pageNumber}/{(int)Math.Ceiling((double)contacts.Count / PageSize)}");
+            Console.WriteLine($"\nPage {pageNumber}/{(int)Math.Ceiling((double)employee.Count / PageSize)}");
         }
 
         /// <summary>
@@ -290,43 +272,34 @@ namespace AdvancedTasks.Phonebook
             Console.ResetColor();
         }
 
-        /// <summary>
-        /// Prompts the user to enter a search term and displays the filtered contact list.
-        /// </summary>
-        public static void SearchContacts()
-        {
-            Console.Write("Enter search term (name, phone number, or email): ");
-            string searchTerm = Console.ReadLine() ?? string.Empty;
-            ListOfContact(1, searchTerm);
-        }
 
         /// <summary>
         /// Saves the contact list to a file.
         /// </summary>
-        public static void SaveContactsToFile()
+        public static void SaveEmployeesToFile(bool sendMessage = false)
         {
-            string json = JsonSerializer.Serialize(contacts, new JsonSerializerOptions { WriteIndented = true });
+            string json = JsonSerializer.Serialize(employees, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(filePath, json);
-            Console.WriteLine("Contacts saved to file successfully.");
+            if(sendMessage) Console.WriteLine("Contacts saved to file successfully.");
         }
 
         /// <summary>
         /// Loads the contact list from a file.
         /// </summary>
-        public static void LoadContactsFromFile()
+        public static void LoadEmployeesFromFile(bool sendMessage = false)
         {
             if (File.Exists(filePath))
             {
                 string json = File.ReadAllText(filePath);
-                contacts = JsonSerializer.Deserialize<List<Contact>>(json) ?? new List<Contact>();
-                Console.WriteLine("Contacts loaded from file successfully.");
+                employees = JsonSerializer.Deserialize<List<Employee>>(json) ?? new List<Employee>();
+                if(sendMessage) Console.WriteLine("Employees loaded from file successfully.");
             }
             else
             {
                 // Create the file if it does not exist
                 File.WriteAllText(filePath, "[]");
-                contacts = new List<Contact>();
-                Console.WriteLine("No contacts file found. A new file has been created.");
+                employees = new List<Employee>();
+                if(sendMessage) Console.WriteLine("No employees file found. A new file has been created.");
             }
         }
     }
